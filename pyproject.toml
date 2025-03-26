@@ -3,9 +3,9 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pipup"
-version = "0.1.0"
-description = "Update requirements.txt files with latest package versions"
+name = "pip-chronos"
+version = "0.1.1"
+description = "Chronos for pip: Automatically update your requirements.txt files with the latest package versions"
 readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "MIT"}
@@ -39,13 +39,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/DeezNutzHimself/pipup"
-Issues = "https://github.com/DeezNutzHimself/pipup/issues"
-Documentation = "https://github.com/DeezNutzHimself/pipup#readme"
-Changelog = "https://github.com/DeezNutzHimself/pipup/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/DeezNutzHimself/pip-chronos"
+Issues = "https://github.com/DeezNutzHimself/pip-chronos/issues"
+Documentation = "https://github.com/DeezNutzHimself/pip-chronos#readme"
+Changelog = "https://github.com/DeezNutzHimself/pip-chronos/blob/main/CHANGELOG.md"
 
 [project.scripts]
-pipup = "pipup.cli:main"
+chronos = "pipup.cli:main"
 
 [tool.setuptools]
 packages = ["pipup"]

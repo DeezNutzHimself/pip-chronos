@@ -1,6 +1,6 @@
-# pipup
+# pip-chronos
 
-**pipup** is a command-line tool that automatically updates your `requirements.txt` files with the latest package versions from PyPI.
+**pip-chronos** is a command-line tool that automatically updates your `requirements.txt` files with the latest package versions from PyPI. Like the Greek god Chronos who governs time, this tool helps keep your dependencies up to date.
 
 ## Features
 
@@ -16,7 +16,7 @@
 Install from PyPI:
 
 ```bash
-pip install pipup
+pip install pip-chronos
 ```
 
 ## Usage
@@ -24,19 +24,19 @@ pip install pipup
 Update all requirements files in the current directory and subdirectories:
 
 ```bash
-pipup
+pip-chronos
 ```
 
 Update a specific requirements file:
 
 ```bash
-pipup path/to/requirements.txt
+pip-chronos path/to/requirements.txt
 ```
 
 Run in dry-run mode (show changes without modifying files):
 
 ```bash
-pipup --dry-run
+pip-chronos --dry-run
 ```
 
 ### Options
@@ -60,31 +60,31 @@ options:
 Update all requirements files in the project:
 
 ```bash
-pipup
+pip-chronos
 ```
 
 Update only a specific service subdirectory:
 
 ```bash
-pipup services/api-service/
+pip-chronos services/api-service/
 ```
 
 Preview updates without making changes:
 
 ```bash
-pipup --dry-run
+pip-chronos --dry-run
 ```
 
 Update packages with version ranges (>=, <=, etc.):
 
 ```bash
-pipup --update-ranges
+pip-chronos --update-ranges
 ```
 
 Use a custom pattern to find requirements files:
 
 ```bash
-pipup --pattern="**/requirements*.txt"
+pip-chronos --pattern="**/requirements*.txt"
 ```
 
 ## How It Works
