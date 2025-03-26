@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import concurrent.futures
+import tempfile
 from pathlib import Path
 
 
@@ -34,6 +35,76 @@ def get_latest_version(package_name):
     except subprocess.CalledProcessError:
         print(f"Failed to get version for {package_name}")
         return None
+
+
+def validate_dependencies(dependencies, parallel=True, max_workers=10):
+    """Validate that the dependencies can be installed together.
+    
+    Args:
+        dependencies: List of (package_name, version, operator, comment) tuples
+        parallel: Whether to validate in parallel
+        max_workers: Maximum number of worker threads
+        
+    Returns:
+        tuple: (is_valid, issues) where is_valid is a boolean and issues is a dict mapping
+               package names to error messages
+    """
+    # Filter out None package names (comments, etc.)
+    valid_deps = [(p, v, op) for p, v, op, _ in dependencies if p is not None]
+    if not valid_deps:
+        return True, {}
+    
+    # Create requirements string for validation
+    requirements = []
+    for package, version, operator in valid_deps:
+        if operator and version:
+            requirements.append(f"{package}{operator}{version}")
+        else:
+            requirements.append(package)
+    
+    # Create a temporary file with the requirements
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.txt') as tmp:
+        tmp_path = tmp.name
+        tmp.write("\n".join(requirements))
+    
+    try:
+        # Use pip check to validate dependencies
+        result = subprocess.run(
+            ["pip", "install", "--dry-run", "-r", tmp_path], 
+            capture_output=True, 
+            text=True
+        )
+        
+        if result.returncode != 0:
+            # Parse the error message to find problematic packages
+            issues = {}
+            lines = result.stderr.splitlines()
+            for line in lines:
+                if "ERROR:" in line and "Could not find a version that satisfies the requirement" in line:
+                    package_match = re.search(r"requirement ([^ ]+)", line)
+                    if package_match:
+                        package = package_match.group(1)
+                        issues[package] = "Package not found or version constraint cannot be satisfied"
+                elif "ERROR:" in line and "packages have incompatible dependencies" in line:
+                    # This is a generic message, would need more parsing to extract specific packages
+                    for pkg, _, _ in valid_deps:
+                        if pkg in line:
+                            issues[pkg] = "Incompatible dependencies"
+            
+            # If no specific issues found but command failed, report generic error
+            if not issues:
+                issues["general"] = "Dependency validation failed: " + result.stderr
+            
+            return False, issues
+        
+        return True, {}
+    
+    finally:
+        # Clean up the temporary file
+        try:
+            os.unlink(tmp_path)
+        except:
+            pass
 
 
 def parse_requirements(file_path):
@@ -72,7 +143,7 @@ def parse_requirements(file_path):
     return packages, lines
 
 
-def update_requirements_file(file_path, parallel=True, max_workers=10, update_ranges=True, dry_run=False):
+def update_requirements_file(file_path, parallel=True, max_workers=10, update_ranges=True, dry_run=False, validate=True):
     """Update a requirements.txt file with the latest package versions"""
     if not file_path.exists():
         print(f"File {file_path} does not exist")
@@ -109,6 +180,7 @@ def update_requirements_file(file_path, parallel=True, max_workers=10, update_ra
     
     # Generate updated file content
     updated_lines = []
+    updated_packages = []
     updates_made = False
     
     for package_name, current_version, operator, line_or_comment in packages:
@@ -127,10 +199,27 @@ def update_requirements_file(file_path, parallel=True, max_workers=10, update_ra
         if latest_version and latest_version != current_version:
             print(f"  Updating {package_name}: {current_version} -> {latest_version}")
             updated_lines.append(f"{package_name}{operator}{latest_version}{line_or_comment}\n")
+            # Keep track of updated packages for validation
+            updated_packages.append((package_name, latest_version, operator, line_or_comment))
             updates_made = True
         else:
             # No update needed
             updated_lines.append(f"{package_name}{operator}{current_version}{line_or_comment}\n")
+            # Add to updated packages with current version for validation
+            if package_name in package_names:
+                updated_packages.append((package_name, current_version, operator, line_or_comment))
+
+    # Validate dependencies if requested and updates were made
+    if validate and updates_made and not dry_run:
+        print("  Validating dependencies...")
+        is_valid, issues = validate_dependencies(updated_packages, parallel, max_workers)
+        
+        if not is_valid:
+            print("  ❌ Dependency validation failed. Not updating file.")
+            for package, error in issues.items():
+                print(f"    - {package}: {error}")
+            return False
+        print("  ✅ Dependencies validated successfully")
     
     # Write updated file (unless dry run)
     if updates_made and not dry_run:
@@ -156,8 +245,9 @@ def update_requirements_files(
     pattern='**/requirements.txt',
     parallel=True, 
     max_workers=10, 
-    update_ranges=False, 
-    dry_run=False
+    update_ranges=True, 
+    dry_run=False,
+    validate=True
 ):
     """Update multiple requirements files."""
     if files is None:
@@ -174,7 +264,7 @@ def update_requirements_files(
     # Update each file
     updates_count = 0
     for req_file in files:
-        if update_requirements_file(req_file, parallel, max_workers, update_ranges, dry_run):
+        if update_requirements_file(req_file, parallel, max_workers, update_ranges, dry_run, validate):
             updates_count += 1
     
     print(f"Updates completed: {updates_count} file(s) {'would be' if dry_run else ''} modified")

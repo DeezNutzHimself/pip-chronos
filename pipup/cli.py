@@ -42,6 +42,13 @@ def main():
         help='Do not update packages with range operators (>=, <=, etc.)'
     )
     parser.add_argument(
+        '--no-validate', 
+        action='store_true',
+        dest='no_validate',
+        default=False,
+        help='Skip validation of dependencies'
+    )
+    parser.add_argument(
         '--dry-run', 
         action='store_true',
         help='Show what would be updated without making changes'
@@ -71,7 +78,8 @@ def main():
         parallel=not args.sequential,
         max_workers=args.max_workers,
         update_ranges=not args.no_update_ranges,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        validate=not args.no_validate
     )
 
 
