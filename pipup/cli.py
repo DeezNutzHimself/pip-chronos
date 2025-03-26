@@ -35,9 +35,11 @@ def main():
         help='Run updates sequentially (no parallel processing)'
     )
     parser.add_argument(
-        '--update-ranges', 
+        '--no-update-ranges', 
         action='store_true',
-        help='Update packages with range operators (>=, <=, etc.)'
+        dest='no_update_ranges',
+        default=False,
+        help='Do not update packages with range operators (>=, <=, etc.)'
     )
     parser.add_argument(
         '--dry-run', 
@@ -68,7 +70,7 @@ def main():
         files=files,
         parallel=not args.sequential,
         max_workers=args.max_workers,
-        update_ranges=args.update_ranges,
+        update_ranges=not args.no_update_ranges,
         dry_run=args.dry_run
     )
 

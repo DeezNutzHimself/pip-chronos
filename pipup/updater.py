@@ -72,7 +72,7 @@ def parse_requirements(file_path):
     return packages, lines
 
 
-def update_requirements_file(file_path, parallel=True, max_workers=10, update_ranges=False, dry_run=False):
+def update_requirements_file(file_path, parallel=True, max_workers=10, update_ranges=True, dry_run=False):
     """Update a requirements.txt file with the latest package versions"""
     if not file_path.exists():
         print(f"File {file_path} does not exist")
