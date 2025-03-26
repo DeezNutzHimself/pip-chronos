@@ -45,7 +45,7 @@ Documentation = "https://github.com/DeezNutzHimself/pip-chronos#readme"
 Changelog = "https://github.com/DeezNutzHimself/pip-chronos/blob/main/CHANGELOG.md"
 
 [project.scripts]
-chronos = "pipup.cli:main"
+pip-chronos = "pipup.cli:main"
 
 [tool.setuptools]
 packages = ["pipup"]
